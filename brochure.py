@@ -15,7 +15,7 @@ ollama = OpenAI(base_url=OLLAMA_BASE_URL, api_key='ollama')
 
 DEFAULT_MODEL = "llama3.2"
 
-website = "https://edwarddonner.com"
+website = "https://arusha.com.np"
 
 links = fetch_website_links(website)
 
@@ -77,6 +77,50 @@ def select_relevant_links(url):
     print(f"Found {len(links['links'])} relevant links")
     return links
 
-print(select_relevant_links(website))
+# print(select_relevant_links(website))
 
+def fetch_page_and_all_relevant_links(url):
+    contents = fetch_website_contents(url)
+    relevant_links = select_relevant_links(url)
+    result = f"## Landing Page:\n\n{contents}\n## Relevant Links:\n"
+    for link in relevant_links['links']:
+        result += f"\n\n### Link: {link['type']}\n"
+        result += fetch_website_contents(link["url"])
+    return result
 
+# print(fetch_page_and_all_relevant_links(website))
+
+brochure_system_prompt = """
+You are an assistant that analyzes the contents of several relevant pages from a company website
+and creates a short brochure about the company for prospective customers, investors and recruits.
+Respond in markdown without code blocks.
+Include details of company culture, customers and careers/jobs if you have the information.
+"""
+
+def get_brochure_user_prompt(company_name, url):
+    user_prompt = f"""
+You are looking at a company called: {company_name}
+Here are the contents of its landing page and other relevant pages;
+use this information to build a short brochure of the company in markdown without code blocks.\n\n
+"""
+    user_prompt += fetch_page_and_all_relevant_links(url)
+    user_prompt = user_prompt[:5_000] # Truncate if more than 5,000 characters
+    return user_prompt
+
+# print(get_brochure_user_prompt("Arusha Shahi", website))
+
+def create_brochure(company_name, url):
+    response = ollama.chat.completions.create(
+        model=DEFAULT_MODEL,
+        messages=[
+            {"role": "system", "content": brochure_system_prompt},
+            {"role": "user", "content": get_brochure_user_prompt(company_name, url)}
+        ],
+    )
+    result = response.choices[0].message.content
+    return result
+
+company_name = input("Enter company name: ")
+website_link = input("Enter website link: ")
+
+print(create_brochure(company_name, website_link))
