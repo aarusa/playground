@@ -7,8 +7,7 @@ from scraper import fetch_website_contents
 load_dotenv(override=True)
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL")
 
-if not OLLAMA_BASE_URL:
-    raise ValueError("OLLAMA_BASE_URL is not set in the .env file or environment variables.")
+x
 
 # Initialize OpenAI client pointing to Ollama
 ollama = OpenAI(base_url=OLLAMA_BASE_URL, api_key='ollama')
